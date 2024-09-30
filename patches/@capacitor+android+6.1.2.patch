@@ -1,0 +1,39 @@
+diff --git a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/Bridge.java b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/Bridge.java
+index 594146a..25302b1 100644
+--- a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/Bridge.java
++++ b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/Bridge.java
+@@ -261,7 +261,13 @@ public class Bridge {
+         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+             String allowedOrigin = Uri.parse(appUrl).buildUpon().path(null).fragment(null).clearQuery().build().toString();
+             try {
+-                WebViewCompat.addDocumentStartJavaScript(webView, injector.getScriptString(), Collections.singleton(allowedOrigin));
++                // https://github.com/ionic-team/capacitor/pull/7571
++                final String finalAllowedOrigin = allowedOrigin;
++                Set<String> allowedOrigins = new HashSet<String>() {{
++                    add(finalAllowedOrigin);
++                    addAll(allowedOriginRules);
++                }};
++                WebViewCompat.addDocumentStartJavaScript(webView, injector.getScriptString(), allowedOrigins);
+                 injector = null;
+             } catch (IllegalArgumentException ex) {
+                 Logger.warn("Invalid url, using fallback");
+diff --git a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/WebViewLocalServer.java b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/WebViewLocalServer.java
+index f1fc63c..ddee810 100755
+--- a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/WebViewLocalServer.java
++++ b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/WebViewLocalServer.java
+@@ -471,9 +471,12 @@ public class WebViewLocalServer {
+                     Map<String, String> headers = request.getRequestHeaders();
+                     boolean isHtmlText = false;
+                     for (Map.Entry<String, String> header : headers.entrySet()) {
+-                        if (header.getKey().equalsIgnoreCase("Accept") && header.getValue().toLowerCase().contains("text/html")) {
+-                            isHtmlText = true;
+-                            break;
++                        if (header.getKey().equalsIgnoreCase("Accept")) {
++                            String val = header.getValue().toLowerCase();
++                            if (val.contains("text/html") && !val.equals("text/html, application/xhtml+xml") && !val.contains("text/vnd.turbo-stream")) {
++                                isHtmlText = true;
++                                break;
++                            }
+                         }
+                     }
+                     if (isHtmlText) {

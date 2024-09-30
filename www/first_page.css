@@ -1,0 +1,19 @@
+#app {
+  margin-top: 50vh;
+  transform: translateY(-50%);
+  -webkit-transform: translateY(-50%);
+}
+
+.logo {
+  background: url(logo.png);
+  height: 128px;
+  width: 128px;
+  margin: 0 auto;
+}
+
+.info {
+  font-size: 12px;
+  margin: 15px;
+  display: block;
+  text-align: center;
+}
